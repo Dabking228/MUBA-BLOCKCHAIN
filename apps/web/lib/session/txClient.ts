@@ -35,6 +35,29 @@ export async function runSponsoredAction(
   return execJson.digest as string;
 }
 
+/** Register one household: mint a reference code, then run the sponsored tx. Returns the code. */
+export async function registerHousehold(
+  keypair: Ed25519Keypair,
+  params: {
+    registrarCapId: string;
+    zoneId: string;
+    householdId: string;
+    postcode: string;
+    tier: number;
+  },
+): Promise<{ code: string; digest: string }> {
+  const rc = await fetch("/api/reference-code", { method: "POST" }).then((r) => r.json());
+  const digest = await runSponsoredAction(keypair, "register_household", {
+    registrarCapId: params.registrarCapId,
+    zoneId: params.zoneId,
+    householdId: params.householdId,
+    referenceCodeHashHex: rc.codeHash,
+    postcode: params.postcode,
+    tier: params.tier,
+  });
+  return { code: rc.code as string, digest };
+}
+
 export async function requestFaucet(address: string): Promise<void> {
   const res = await fetch("/api/faucet", {
     method: "POST",
