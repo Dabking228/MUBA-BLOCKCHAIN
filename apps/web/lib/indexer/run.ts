@@ -96,6 +96,11 @@ async function doRun(): Promise<IndexerResult> {
   }
 
   // Re-read each touched registration from chain → authoritative mirror row.
+  // Also opportunistically self-heal every mirror row while the set is small.
+  const { data: allRegs } = await sb.from("household_registrations").select("id");
+  if (allRegs && allRegs.length <= 60) {
+    for (const { id } of allRegs) touchedRegistrations.add(id);
+  }
   for (const id of touchedRegistrations) {
     await syncRegistration(sb, id);
   }

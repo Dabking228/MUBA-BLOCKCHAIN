@@ -16,7 +16,17 @@ export interface OnChainRegistration {
 }
 
 function toHex(v: unknown): string {
-  if (typeof v === "string") return v.startsWith("0x") ? v.slice(2) : v;
+  // The gRPC/JSON representation of a Move `vector<u8>` is a base64 string.
+  // Older transports may give "0x…" hex or a number array.
+  if (typeof v === "string") {
+    if (v.startsWith("0x")) return v.slice(2).toLowerCase();
+    if (/^[0-9a-f]+$/i.test(v) && v.length % 2 === 0) return v.toLowerCase();
+    try {
+      return Buffer.from(v, "base64").toString("hex");
+    } catch {
+      return v;
+    }
+  }
   if (Array.isArray(v)) return v.map((n) => Number(n).toString(16).padStart(2, "0")).join("");
   return "";
 }
