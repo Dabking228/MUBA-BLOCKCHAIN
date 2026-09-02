@@ -1,0 +1,8 @@
+{
+  "NEXT_PUBLIC_TREASURY_ID": "0xf38fb4c8d6ffc54ea26e6bea884672c7cdf32f941c1f123b9cad92d3d9edfd5e",
+  "NEXT_PUBLIC_ZONE_ID": "0x79f858ef2145192d79004f81ff18f01db03b8b30b598bb1fc1f3ca5ab6bb960f",
+  "DEMO_OFFICIAL_KEY": "suiprivkey1qrsls9lmnpgrfq504dltjty66c90jr4y2psj923nxzkz04qdnv3szqynxka",
+  "DEMO_VERIFIER_KEY": "suiprivkey1qp5wx297sy9c8a0vq9392sd9l4xyd0ar065u9qm887nsaqef4f7hsxwnd2c",
+  "DEMO_OFFICIAL_ADDRESS": "0xd858e245d4e38e29dd993c3605e9a5b46d7dc0d199bd8e5a2df98e1b913a2daf",
+  "DEMO_VERIFIER_ADDRESS": "0xb4edd0ada15437dcf5fe632f218e66cb5fde5abd82149f64dee02664009f6392"
+}

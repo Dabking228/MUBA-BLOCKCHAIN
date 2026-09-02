@@ -1,69 +1,93 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/Card";
+import { buttonClasses } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 
-export default function Home() {
+const AUDIENCES = [
+  {
+    title: "Affected households",
+    body: "Registered by an official with a printed reference code. Once you're back online, sign in and claim — your aid is released straight to your own account.",
+    href: "/claim",
+    cta: "Claim your aid",
+  },
+  {
+    title: "Donors",
+    body: "Individuals, companies, and government bodies top up one public treasury. Every ringgit is traceable from your donation to the household that received it.",
+    href: "/donate",
+    cta: "Make a donation",
+  },
+  {
+    title: "Officials & verifiers",
+    body: "PPS staff, Ketua Kampung, and District officers register households on their behalf. AI assists triage; a human always makes the call that moves money.",
+    href: "/register",
+    cta: "Register a household",
+  },
+];
+
+const STEPS = [
+  ["Zone opened", "Government sets eligible postcodes, fixed tier payouts, and a hard budget cap."],
+  ["Household registered", "An official records the severity tier and issues a physical reference code — no wallet or internet needed."],
+  ["Verified", "PPS and District registrations auto-verify; community submissions get an independent reviewer."],
+  ["Claimed & paid", "The household signs in, links their account with the code, and the fixed tier amount is released once."],
+];
+
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="flex flex-col gap-16">
+      <section className="flex flex-col items-start gap-6 pt-4">
+        <Badge tone="primary">Sui testnet · hackathon build</Badge>
+        <h1 className="max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-foreground sm:text-5xl">
+          Disaster relief that reaches households in minutes — and proves it.
+        </h1>
+        <p className="max-w-2xl text-lg text-muted">
+          MySteadyAid moves aid from donors and government budgets to flood-affected households in
+          Malaysia through a transparent on-chain treasury. Registration works with no wallet and no
+          connectivity; duplicate and ghost claims are blocked by the contract itself.
+        </p>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/dashboard" className={buttonClasses({ size: "lg" })}>
+            View the transparency dashboard
+          </Link>
+          <Link
+            href="/donate"
+            className={buttonClasses({ size: "lg", variant: "secondary" })}
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            Donate to the treasury
+          </Link>
         </div>
-      </main>
+      </section>
+
+      <section className="grid gap-4 sm:grid-cols-3">
+        {AUDIENCES.map((a) => (
+          <Card key={a.title} className="flex flex-col">
+            <CardContent className="flex flex-1 flex-col gap-3 pt-5">
+              <CardTitle>{a.title}</CardTitle>
+              <CardDescription className="flex-1">{a.body}</CardDescription>
+              <Link
+                href={a.href}
+                className="text-sm font-medium text-primary hover:text-primary-hover"
+              >
+                {a.cta} →
+              </Link>
+            </CardContent>
+          </Card>
+        ))}
+      </section>
+
+      <section className="flex flex-col gap-6">
+        <h2 className="text-2xl font-semibold tracking-tight text-foreground">How it works</h2>
+        <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {STEPS.map(([title, body], i) => (
+            <li key={title} className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4">
+              <span className="flex size-7 items-center justify-center rounded-full bg-primary-soft text-sm font-semibold text-primary">
+                {i + 1}
+              </span>
+              <p className="font-medium text-foreground">{title}</p>
+              <p className="text-sm text-muted">{body}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
     </div>
   );
 }
