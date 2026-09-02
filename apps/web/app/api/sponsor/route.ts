@@ -27,6 +27,7 @@ export async function POST(request: Request) {
     const { txBytes, sponsorSignature } = await buildSponsored(thunk, sender);
     return NextResponse.json({ txBytes, sponsorSignature });
   } catch (err) {
+    console.error("[/api/sponsor]", action, err);
     return NextResponse.json({ error: explainError(err) }, { status: 400 });
   }
 }

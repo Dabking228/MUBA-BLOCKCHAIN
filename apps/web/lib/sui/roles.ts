@@ -1,7 +1,7 @@
 import "server-only";
 import { getSuiClient } from "@/lib/sui/client";
 import { serviceClient } from "@/lib/supabase/admin";
-import { PACKAGE_ID, STRUCT } from "@/lib/sui/constants";
+import { STRUCT } from "@/lib/sui/constants";
 import { rowToRegistration } from "@/lib/mappers";
 import { EMPTY_ROLES } from "@/lib/session/types";
 import type { HouseholdRegistrationRow } from "@/lib/supabase/rows";
@@ -16,8 +16,10 @@ export async function resolveRoles(address: string): Promise<ResolvedRoles> {
   const sb = serviceClient();
 
   const [ownedCaps, regs, donations] = await Promise.all([
+    // gRPC's `type` filter needs a full datatype; a package/module prefix is
+    // rejected. Cap addresses own few objects, so list unfiltered and classify.
     client
-      .listOwnedObjects({ owner: address, type: `${PACKAGE_ID}::relief_v3`, limit: 50 })
+      .listOwnedObjects({ owner: address, limit: 50, include: { json: true } })
       .catch(() => ({ objects: [] as { type?: string; json?: unknown }[] })),
     sb
       .from("household_registrations")
