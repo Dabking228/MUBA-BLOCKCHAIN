@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/Card";
 import { buttonClasses } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { SignedInBanner } from "@/components/SignedInBanner";
 
 const AUDIENCES = [
   {
@@ -34,6 +35,7 @@ const STEPS = [
 export default function HomePage() {
   return (
     <div className="flex flex-col gap-16">
+      <SignedInBanner />
       <section className="flex flex-col items-start gap-6 pt-4">
         <Badge tone="primary">Sui testnet · hackathon build</Badge>
         <h1 className="max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-foreground sm:text-5xl">

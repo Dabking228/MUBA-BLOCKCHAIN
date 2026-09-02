@@ -10,10 +10,10 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge, TierBadge } from "@/components/StatusBadge";
 import { AddressPill } from "@/components/AddressPill";
 import { AmountDisplay } from "@/components/AmountDisplay";
-import { StepTimeline, type TimelineStep } from "@/components/StepTimeline";
+import { StepTimeline } from "@/components/StepTimeline";
 import { RefreshButton } from "@/components/RefreshButton";
-import { formatDateTime } from "@/lib/format";
-import { RegistrationStatus, type HouseholdRegistration } from "@/lib/types";
+import { registrationSteps } from "@/lib/timeline";
+import { type HouseholdRegistration } from "@/lib/types";
 
 export default function StatusPage() {
   return (
@@ -82,7 +82,7 @@ function StatusBody() {
 }
 
 function AidCard({ reg }: { reg: HouseholdRegistration }) {
-  const steps: TimelineStep[] = buildSteps(reg);
+  const steps = registrationSteps(reg);
   return (
     <Card>
       <CardHeader>
@@ -102,32 +102,3 @@ function AidCard({ reg }: { reg: HouseholdRegistration }) {
   );
 }
 
-function buildSteps(reg: HouseholdRegistration): TimelineStep[] {
-  const rejected = reg.status === RegistrationStatus.Rejected;
-  const paid = reg.status === RegistrationStatus.Paid;
-  const verified = reg.status === RegistrationStatus.Verified || paid;
-  return [
-    {
-      key: "registered",
-      label: "Registered by an official",
-      detail: formatDateTime(reg.createdAt),
-      state: "done",
-    },
-    {
-      key: "verified",
-      label: rejected ? "Registration rejected" : "Verified",
-      detail: rejected ? "Please re-verify in person" : undefined,
-      state: rejected ? "skipped" : verified ? "done" : "current",
-    },
-    {
-      key: "claimed",
-      label: "Linked to your account",
-      state: reg.claimed ? "done" : rejected ? "skipped" : verified ? "current" : "upcoming",
-    },
-    {
-      key: "paid",
-      label: "Aid received",
-      state: paid ? "done" : rejected ? "skipped" : reg.claimed ? "current" : "upcoming",
-    },
-  ];
-}

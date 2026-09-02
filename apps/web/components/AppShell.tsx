@@ -14,12 +14,18 @@ interface NavItem {
 }
 
 function useNavItems(): NavItem[] {
-  const { roles } = useSession();
-  const items: NavItem[] = [
-    { href: "/", label: "Home" },
-    { href: "/dashboard", label: "Transparency" },
-    { href: "/donate", label: "Donate" },
-  ];
+  const { identity, roles } = useSession();
+  const items: NavItem[] = identity
+    ? [
+        { href: "/home", label: "My dashboard" },
+        { href: "/dashboard", label: "Transparency" },
+        { href: "/donate", label: "Donate" },
+      ]
+    : [
+        { href: "/", label: "Home" },
+        { href: "/dashboard", label: "Transparency" },
+        { href: "/donate", label: "Donate" },
+      ];
   if (!roles) return items;
   if (roles.households.length > 0) {
     items.push({ href: "/status", label: "My aid" });

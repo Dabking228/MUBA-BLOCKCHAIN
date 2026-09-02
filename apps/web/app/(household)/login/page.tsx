@@ -5,12 +5,39 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "@/components/providers/SessionProvider";
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Field, Input } from "@/components/ui/Field";
 import { Callout } from "@/components/ui/Callout";
 import { AddressPill } from "@/components/AddressPill";
 
 interface DemoIdentities {
   official?: { address: string; secretKey: string };
   verifier?: { address: string; secretKey: string };
+}
+
+function ImportKeyForm({ onImport, busy }: { onImport: (key: string) => void; busy: boolean }) {
+  const [key, setKey] = React.useState("");
+  return (
+    <div className="mt-3 flex flex-col gap-2">
+      <Field label="Secret key (suiprivkey1…)">
+        <Input
+          value={key}
+          onChange={(e) => setKey(e.target.value)}
+          placeholder="suiprivkey1…"
+          className="font-mono text-xs"
+          autoComplete="off"
+        />
+      </Field>
+      <Button
+        size="sm"
+        variant="secondary"
+        loading={busy}
+        disabled={!key.startsWith("suiprivkey1")}
+        onClick={() => onImport(key.trim())}
+      >
+        Sign in with this key
+      </Button>
+    </div>
+  );
 }
 
 export default function LoginPage() {
@@ -25,7 +52,7 @@ function LoginInner() {
   const { identity, signInNew, signInWithKey } = useSession();
   const router = useRouter();
   const params = useSearchParams();
-  const next = params.get("next") || "/";
+  const next = params.get("next") || "/home";
   const [busy, setBusy] = React.useState<string | null>(null);
   const [demo, setDemo] = React.useState<DemoIdentities>({});
   const devMode = (process.env.NEXT_PUBLIC_AUTH_MODE ?? "dev") === "dev";
@@ -125,6 +152,18 @@ function LoginInner() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {devMode && (
+        <details className="rounded-lg border border-border bg-surface px-4 py-3 text-sm">
+          <summary className="cursor-pointer font-medium text-muted">
+            Advanced — sign in with an existing key
+          </summary>
+          <ImportKeyForm
+            onImport={(k) => run("import", () => signInWithKey(k, "Imported account"))}
+            busy={busy === "import"}
+          />
+        </details>
       )}
 
       <Callout tone="info" title="Google sign-in (zkLogin)">

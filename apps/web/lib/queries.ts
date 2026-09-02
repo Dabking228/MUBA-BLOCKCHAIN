@@ -111,3 +111,31 @@ export async function getZones(): Promise<DisasterZone[]> {
   const { data } = await sb.from("disaster_zones").select("*").order("created_at", { ascending: true });
   return ((data ?? []) as DisasterZoneRow[]).map(rowToZone);
 }
+
+export async function getDonationsForAddress(address: string): Promise<Donation[]> {
+  const sb = serviceClient();
+  const { data } = await sb
+    .from("donations")
+    .select("*")
+    .eq("donor_address", address)
+    .order("created_at", { ascending: false });
+  return ((data ?? []) as DonationRow[]).map(rowToDonation);
+}
+
+export interface TransparencySummary {
+  treasuryBalance: string;
+  totalDonated: string;
+  zones: DisasterZone[];
+  pipeline: DashboardData["pipeline"];
+}
+
+/** Compact figures shared by the public dashboard and the combined home view. */
+export async function getTransparencySummary(): Promise<TransparencySummary> {
+  const d = await getDashboardData();
+  return {
+    treasuryBalance: d.treasuryBalance,
+    totalDonated: d.totalDonated,
+    zones: d.zones,
+    pipeline: d.pipeline,
+  };
+}
