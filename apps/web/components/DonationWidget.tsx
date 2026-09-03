@@ -13,10 +13,12 @@ import { useToast } from "@/components/ui/Toast";
 import { mistToSui, suiToMist } from "@/lib/format";
 
 const QUICK = ["0.01", "0.05", "0.1"];
-const DEV = (process.env.NEXT_PUBLIC_AUTH_MODE ?? "dev") === "dev";
+// Donors need SUI equal to what they donate (gas is sponsored). Offer the
+// faucet on any non-mainnet network.
+const TESTNET = (process.env.NEXT_PUBLIC_SUI_NETWORK ?? "testnet") !== "mainnet";
 
 export function DonationWidget() {
-  const { identity, keypair, refreshRoles } = useSession();
+  const { identity, signer, refreshRoles } = useSession();
   const toast = useToast();
   const [amount, setAmount] = React.useState("0.05");
   const [balance, setBalance] = React.useState<string | null>(null);
@@ -44,11 +46,11 @@ export function DonationWidget() {
   const insufficient = balance !== null && amountMist > BigInt(balance);
 
   async function donate() {
-    if (!keypair) return;
+    if (!signer) return;
     setBusy("donate");
     setError(null);
     try {
-      const digest = await runSponsoredAction(keypair, "donate", {
+      const digest = await runSponsoredAction(signer, "donate", {
         amountMist: amountMist.toString(),
       });
       setLastDigest(digest);
@@ -111,7 +113,7 @@ export function DonationWidget() {
         {insufficient && (
           <Callout tone="warning">
             Your wallet balance is below this amount.
-            {DEV && " Use the testnet faucet to top up."}
+            {TESTNET && " Use the testnet faucet to top up."}
           </Callout>
         )}
         {error && <Callout tone="danger">{error}</Callout>}
@@ -125,7 +127,7 @@ export function DonationWidget() {
           <Button loading={busy === "donate"} disabled={amountMist <= 0n || insufficient} onClick={donate}>
             Donate {mistToSui(amountMist)} SUI
           </Button>
-          {DEV && (
+          {TESTNET && (
             <Button variant="secondary" loading={busy === "faucet"} onClick={faucet}>
               Faucet top-up
             </Button>

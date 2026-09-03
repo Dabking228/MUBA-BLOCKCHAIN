@@ -293,4 +293,33 @@ module disaster_relief::relief_v3 {
         registration.status = STATUS_PAID;
         event::emit(AidPaid { registration_id: object::id(registration), head_of_household: recipient, amount });
     }
+
+    // ===== Test-only helpers =====
+    // Stripped from published bytecode; no redeploy needed to add these.
+
+    #[test_only]
+    public fun init_for_testing(ctx: &mut TxContext) {
+        init(ctx);
+    }
+
+    #[test_only]
+    public fun registration_status(r: &HouseholdRegistration): u8 { r.status }
+
+    #[test_only]
+    public fun registration_claimed(r: &HouseholdRegistration): bool { r.claimed }
+
+    #[test_only]
+    public fun zone_budget_spent(z: &DisasterZone): u64 { z.budget_spent }
+
+    #[test_only]
+    public fun treasury_balance<T>(t: &ReliefTreasury<T>): u64 { balance::value(&t.balance) }
+
+    #[test_only]
+    public fun status_verified(): u8 { STATUS_VERIFIED }
+
+    #[test_only]
+    public fun status_pending(): u8 { STATUS_PENDING }
+
+    #[test_only]
+    public fun status_paid(): u8 { STATUS_PAID }
 }

@@ -43,7 +43,7 @@ export default function ClaimPage() {
 }
 
 function ClaimFlow() {
-  const { keypair, refreshRoles } = useSession();
+  const { signer, refreshRoles } = useSession();
   const toast = useToast();
   const router = useRouter();
 
@@ -77,11 +77,11 @@ function ClaimFlow() {
   }
 
   async function doClaim() {
-    if (!keypair || !lookup) return;
+    if (!signer || !lookup) return;
     setBusy("claim");
     setError(null);
     try {
-      await runSponsoredAction(keypair, "claim_and_link", {
+      await runSponsoredAction(signer, "claim_and_link", {
         registrationId: lookup.registrationId,
         code: normalized,
       });
@@ -96,11 +96,11 @@ function ClaimFlow() {
   }
 
   async function doRelease() {
-    if (!keypair || !lookup) return;
+    if (!signer || !lookup) return;
     setBusy("release");
     setError(null);
     try {
-      await runSponsoredAction(keypair, "release_funds", {
+      await runSponsoredAction(signer, "release_funds", {
         registrationId: lookup.registrationId,
         zoneId: lookup.zoneId,
       });

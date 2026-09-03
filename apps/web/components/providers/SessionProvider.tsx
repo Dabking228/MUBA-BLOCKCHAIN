@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import type { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import type { Signer } from "@mysten/sui/cryptography";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import type { ResolvedRoles } from "@/lib/types";
 import { EMPTY_ROLES, type SessionIdentity } from "@/lib/session/types";
 import {
@@ -11,17 +12,24 @@ import {
   setDevKeypair,
   storedLabel,
 } from "@/lib/session/devWallet";
+import {
+  clearZkSession,
+  loadZkSession,
+  zkSignerFrom,
+  type ZkSession,
+} from "@/lib/zklogin/session";
+import { beginGoogleLogin } from "@/lib/zklogin/oauth";
 import { shortAddress } from "@/lib/format";
 
 interface SessionContextValue {
   identity: SessionIdentity | null;
-  keypair: Ed25519Keypair | null;
+  signer: Signer | null;
   roles: ResolvedRoles | null;
   loading: boolean;
-  /** Fresh random dev wallet (a new household / donor). */
   signInNew: () => Promise<void>;
-  /** Sign in with a specific secret key (demo official / verifier). */
   signInWithKey: (secretKey: string, label: string) => Promise<void>;
+  signInGoogle: (next?: string) => Promise<void>;
+  activateZkSession: (session: ZkSession) => Promise<void>;
   signOut: () => void;
   refreshRoles: () => Promise<void>;
 }
@@ -44,46 +52,88 @@ async function fetchRoles(address: string): Promise<ResolvedRoles> {
   }
 }
 
+async function currentEpoch(): Promise<number> {
+  try {
+    const { epoch } = await fetch("/api/epoch", { cache: "no-store" }).then((r) => r.json());
+    return Number(epoch);
+  } catch {
+    return 0;
+  }
+}
+
 export function SessionProvider({ children }: { children: React.ReactNode }) {
-  const [keypair, setKeypair] = React.useState<Ed25519Keypair | null>(null);
+  const [signer, setSigner] = React.useState<Signer | null>(null);
   const [identity, setIdentity] = React.useState<SessionIdentity | null>(null);
   const [roles, setRoles] = React.useState<ResolvedRoles | null>(null);
   const [loading, setLoading] = React.useState(true);
 
-  const activate = React.useCallback(async (kp: Ed25519Keypair, label?: string) => {
-    const address = kp.toSuiAddress();
-    const next: SessionIdentity = {
-      address,
-      authMode: "dev",
-      label: label ?? shortAddress(address),
-    };
-    setKeypair(kp);
-    setIdentity(next);
-    setLoading(true);
-    setRoles(await fetchRoles(address));
-    setLoading(false);
-  }, []);
+  const activate = React.useCallback(
+    async (nextSigner: Signer, id: SessionIdentity) => {
+      setSigner(nextSigner);
+      setIdentity(id);
+      setLoading(true);
+      setRoles(await fetchRoles(id.address));
+      setLoading(false);
+    },
+    [],
+  );
 
-  React.useEffect(() => {
-    const kp = loadDevKeypair();
-    if (kp) void activate(kp, storedLabel() ?? undefined);
-    else setLoading(false);
-  }, [activate]);
-
-  const signInNew = React.useCallback(async () => {
-    await activate(createDevKeypair());
-  }, [activate]);
-
-  const signInWithKey = React.useCallback(
-    async (secretKey: string, label: string) => {
-      await activate(setDevKeypair(secretKey, label), label);
+  const activateZkSession = React.useCallback(
+    async (session: ZkSession) => {
+      const zk = zkSignerFrom(session, await currentEpoch());
+      if (!zk) {
+        clearZkSession();
+        throw new Error("Your sign-in has expired. Please sign in again.");
+      }
+      await activate(zk, {
+        address: session.address,
+        authMode: "google",
+        label: session.email ?? shortAddress(session.address),
+      });
     },
     [activate],
   );
 
+  // Restore a session on first mount — zkLogin takes precedence over a dev key.
+  React.useEffect(() => {
+    const zk = loadZkSession();
+    if (zk) {
+      activateZkSession(zk).catch(() => setLoading(false));
+      return;
+    }
+    const kp = loadDevKeypair();
+    if (kp) {
+      void activate(kp, {
+        address: kp.toSuiAddress(),
+        authMode: "dev",
+        label: storedLabel() ?? shortAddress(kp.toSuiAddress()),
+      });
+    } else {
+      setLoading(false);
+    }
+  }, [activate, activateZkSession]);
+
+  const signInNew = React.useCallback(async () => {
+    const kp = createDevKeypair();
+    await activate(kp, { address: kp.toSuiAddress(), authMode: "dev", label: shortAddress(kp.toSuiAddress()) });
+  }, [activate]);
+
+  const signInWithKey = React.useCallback(
+    async (secretKey: string, label: string) => {
+      const kp = setDevKeypair(secretKey, label);
+      await activate(kp, { address: kp.toSuiAddress(), authMode: "dev", label });
+    },
+    [activate],
+  );
+
+  const signInGoogle = React.useCallback(async (next = "/home") => {
+    await beginGoogleLogin(next);
+  }, []);
+
   const signOut = React.useCallback(() => {
     clearDevKeypair();
-    setKeypair(null);
+    clearZkSession();
+    setSigner(null);
     setIdentity(null);
     setRoles(null);
   }, []);
@@ -94,14 +144,21 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const value: SessionContextValue = {
     identity,
-    keypair,
+    signer,
     roles,
     loading,
     signInNew,
     signInWithKey,
+    signInGoogle,
+    activateZkSession,
     signOut,
     refreshRoles,
   };
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
+}
+
+/** Type guard used by flows that still special-case a raw keypair (none currently). */
+export function isKeypair(s: Signer | null): s is Ed25519Keypair {
+  return s instanceof Ed25519Keypair;
 }

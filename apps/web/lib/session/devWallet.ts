@@ -10,7 +10,7 @@ const STORAGE_KEY = "mysteadyaid.dev.secretKey";
 const LABEL_KEY = "mysteadyaid.dev.label";
 
 export function devLoginEnabled(): boolean {
-  return (process.env.NEXT_PUBLIC_AUTH_MODE ?? "dev") === "dev";
+  return (process.env.NEXT_PUBLIC_SHOW_DEMO_LOGINS ?? "true") === "true";
 }
 
 export function loadDevKeypair(): Ed25519Keypair | null {

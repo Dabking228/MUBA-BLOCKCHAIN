@@ -29,7 +29,7 @@ Mak Minah at 43100, minor water damage to the kitchen only, lives alone.
 The Tan family, 43200, house completely destroyed by the landslide, 4 people.`;
 
 export function BulkRegister() {
-  const { identity, keypair } = useSession();
+  const { identity, signer } = useSession();
   const toast = useToast();
 
   const [zones, setZones] = React.useState<DisasterZone[]>([]);
@@ -91,10 +91,10 @@ export function BulkRegister() {
   }
 
   async function submitRow(row: Row) {
-    if (!keypair || !zone) return;
+    if (!signer || !zone) return;
     update(row.key, { state: "submitting", error: undefined });
     try {
-      const { code } = await registerHousehold(keypair, {
+      const { code } = await registerHousehold(signer, {
         registrarCapId: capId,
         zoneId,
         householdId: row.householdId.trim(),

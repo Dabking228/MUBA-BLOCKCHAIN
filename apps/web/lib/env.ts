@@ -17,6 +17,8 @@ export const publicEnv = {
   zoneId: process.env.NEXT_PUBLIC_ZONE_ID ?? "",
   googleClientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "",
   authMode: (process.env.NEXT_PUBLIC_AUTH_MODE ?? "dev") as "dev" | "google",
+  showDemoLogins: (process.env.NEXT_PUBLIC_SHOW_DEMO_LOGINS ?? "true") === "true",
+  zkloginMaxEpochOffset: Number(process.env.NEXT_PUBLIC_ZKLOGIN_MAX_EPOCH_OFFSET ?? "10"),
   explorerBase: process.env.NEXT_PUBLIC_EXPLORER_BASE ?? "https://testnet.suivision.xyz",
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
   supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
@@ -42,5 +44,6 @@ export function serverEnv() {
     gonkaModel: process.env.GONKA_MODEL ?? "deepseek-ai/DeepSeek-V4-Flash-0731",
     zkloginProverUrl:
       process.env.ZKLOGIN_PROVER_URL ?? "https://prover-dev.mystenlabs.com/v1",
+    zkloginSaltSecret: required("ZKLOGIN_SALT_SECRET", process.env.ZKLOGIN_SALT_SECRET),
   };
 }

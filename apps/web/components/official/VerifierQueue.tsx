@@ -16,7 +16,7 @@ import { formatRelative } from "@/lib/format";
 import type { AiRecommendation, HouseholdRegistration } from "@/lib/types";
 
 export function VerifierQueue() {
-  const { identity, keypair, refreshRoles } = useSession();
+  const { identity, signer, refreshRoles } = useSession();
   const toast = useToast();
   const [items, setItems] = React.useState<HouseholdRegistration[]>([]);
   const [verifierCapId, setVerifierCapId] = React.useState<string | null>(null);
@@ -40,10 +40,10 @@ export function VerifierQueue() {
   }, [load]);
 
   async function act(reg: HouseholdRegistration, decision: "verify" | "reject", reason?: string) {
-    if (!keypair || !verifierCapId) return;
+    if (!signer || !verifierCapId) return;
     try {
       await runSponsoredAction(
-        keypair,
+        signer,
         decision === "verify" ? "verify_registration" : "reject_registration",
         decision === "verify"
           ? { verifierCapId, registrationId: reg.id }

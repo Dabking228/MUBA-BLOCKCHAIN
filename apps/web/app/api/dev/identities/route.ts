@@ -6,7 +6,7 @@ import { publicEnv } from "@/lib/env";
 // by scripts/seed.ts so the login screen can offer one-click role sign-in.
 // These addresses only hold capability objects (no funds); disabled outside dev.
 export async function GET() {
-  if (publicEnv.authMode !== "dev") {
+  if (!publicEnv.showDemoLogins) {
     return NextResponse.json({ error: "Not available" }, { status: 404 });
   }
 

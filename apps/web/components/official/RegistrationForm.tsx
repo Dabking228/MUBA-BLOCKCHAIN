@@ -32,7 +32,7 @@ interface Done {
 }
 
 export function RegistrationForm() {
-  const { identity, keypair, refreshRoles } = useSession();
+  const { identity, signer, refreshRoles } = useSession();
   const toast = useToast();
 
   const [zones, setZones] = React.useState<DisasterZone[]>([]);
@@ -73,12 +73,12 @@ export function RegistrationForm() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!keypair || !zone) return;
+    if (!signer || !zone) return;
     setBusy(true);
     setError(null);
     try {
       const rc = await fetch("/api/reference-code", { method: "POST" }).then((r) => r.json());
-      await runSponsoredAction(keypair, "register_household", {
+      await runSponsoredAction(signer, "register_household", {
         registrarCapId: capId,
         zoneId,
         householdId: householdId.trim(),

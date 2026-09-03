@@ -225,15 +225,15 @@ function HouseholdCard({
   reg: HouseholdRegistration;
   onChange: () => void;
 }) {
-  const { keypair, refreshRoles } = useSession();
+  const { signer, refreshRoles } = useSession();
   const toast = useToast();
   const [busy, setBusy] = React.useState(false);
 
   async function release() {
-    if (!keypair) return;
+    if (!signer) return;
     setBusy(true);
     try {
-      await runSponsoredAction(keypair, "release_funds", {
+      await runSponsoredAction(signer, "release_funds", {
         registrationId: reg.id,
         zoneId: reg.zoneId,
       });
