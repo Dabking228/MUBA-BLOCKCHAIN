@@ -13,13 +13,19 @@ export const useAdminSecret = () => React.useContext(AdminSecretContext);
 
 /** Simple shared-passcode gate for the admin console (checked server-side on every call). */
 export function AdminGate({ children }: { children: React.ReactNode }) {
-  const [secret, setSecret] = React.useState<string | null>(null);
+  const [secret, setSecret] = React.useState("");
+  const [ready, setReady] = React.useState(false);
   const [input, setInput] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
   const [checking, setChecking] = React.useState(false);
 
   React.useEffect(() => {
-    setSecret(sessionStorage.getItem(KEY));
+    try {
+      setSecret(sessionStorage.getItem(KEY) ?? "");
+    } catch {
+      /* storage unavailable */
+    }
+    setReady(true);
   }, []);
 
   async function submit(e: React.FormEvent) {
@@ -36,15 +42,19 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
         setError("That passcode was not accepted.");
         return;
       }
-      sessionStorage.setItem(KEY, input);
+      try {
+        sessionStorage.setItem(KEY, input);
+      } catch {
+        /* storage unavailable — session-only */
+      }
       setSecret(input);
     } finally {
       setChecking(false);
     }
   }
 
-  if (secret === null) {
-    return null; // hydration
+  if (!ready) {
+    return null; // avoid a hydration flash
   }
 
   if (!secret) {
@@ -84,7 +94,11 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
           <button
             className="ml-2 font-medium underline"
             onClick={() => {
-              sessionStorage.removeItem(KEY);
+              try {
+                sessionStorage.removeItem(KEY);
+              } catch {
+                /* ignore */
+              }
               setSecret("");
             }}
           >

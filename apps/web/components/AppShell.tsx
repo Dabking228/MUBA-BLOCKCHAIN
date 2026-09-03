@@ -71,7 +71,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const navItems = useNavItems();
 
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-30 border-b border-border bg-surface/90 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4">
           <Link href="/" className="flex items-center gap-2 font-semibold text-foreground">
