@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/components/providers/SessionProvider";
@@ -45,6 +45,7 @@ function useNavItems(): NavItem[] {
 
 function AuthControls() {
   const { identity, signOut } = useSession();
+  const router = useRouter();
 
   if (identity) {
     return (
@@ -52,7 +53,16 @@ function AuthControls() {
         <Badge tone="primary" className="font-mono">
           {identity.label}
         </Badge>
-        <Button variant="ghost" size="sm" onClick={signOut}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            signOut();
+            // Leave whatever (possibly protected) page we were on, so the
+            // next sign-in doesn't inherit a stale "return to this page" link.
+            router.push("/");
+          }}
+        >
           Sign out
         </Button>
       </div>

@@ -4,7 +4,7 @@ import { fromBase64, toBase64 } from "@mysten/sui/utils";
 import type { Signer } from "@mysten/sui/cryptography";
 import { getSuiClient } from "@/lib/sui/client";
 import { sponsorKeypair } from "@/lib/sui/keys";
-import { explainError } from "@/lib/sui/errors";
+import { explainError, isZkLoginSignatureError } from "@/lib/sui/errors";
 
 type Thunk = (tx: Transaction) => void;
 
@@ -49,11 +49,21 @@ export async function executeSponsored(params: {
   senderSignature: string;
 }) {
   const client = getSuiClient();
-  const result = await client.executeTransaction({
-    transaction: fromBase64(params.txBytes),
-    signatures: [params.senderSignature, params.sponsorSignature],
-    include: { effects: true, events: true },
-  });
+  let result;
+  try {
+    result = await client.executeTransaction({
+      transaction: fromBase64(params.txBytes),
+      signatures: [params.senderSignature, params.sponsorSignature],
+      include: { effects: true, events: true },
+    });
+  } catch (err) {
+    // A bad signature (e.g. a stale/invalid zkLogin proof) is rejected before
+    // execution — the client throws rather than returning a FailedTransaction.
+    if (isZkLoginSignatureError(err)) {
+      console.error("[executeSponsored] zkLogin signature failed verification:", err);
+    }
+    throw err;
+  }
 
   const tx = result.Transaction ?? result.FailedTransaction;
   if (!tx || !tx.effects.status.success) {

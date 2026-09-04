@@ -71,6 +71,14 @@ export function RegistrationForm() {
   const channel = (selectedCap?.channel ?? Channel.PPS) as Channel;
   const willAutoVerify = AUTO_VERIFY_CHANNELS.has(channel);
 
+  function selectZone(id: string) {
+    setZoneId(id);
+    // The postcode list is zone-specific — reset it so a postcode from the
+    // previous zone can't be silently submitted against the new one.
+    const next = zones.find((z) => z.id === id);
+    setPostcode(next?.eligiblePostcodes[0] ?? "");
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!signer || !zone) return;
@@ -116,7 +124,7 @@ export function RegistrationForm() {
       <CardContent>
         <form onSubmit={submit} className="flex flex-col gap-4">
           <Field label="Disaster zone">
-            <Select value={zoneId} onChange={(e) => setZoneId(e.target.value)}>
+            <Select value={zoneId} onChange={(e) => selectZone(e.target.value)}>
               {zones.map((z) => (
                 <option key={z.id} value={z.id}>
                   {z.name}
@@ -178,7 +186,13 @@ export function RegistrationForm() {
 
           {error && <Callout tone="danger">{error}</Callout>}
 
-          <Button type="submit" loading={busy} disabled={!householdId.trim() || !capId || !zone}>
+          <Button
+            type="submit"
+            loading={busy}
+            disabled={
+              !householdId.trim() || !capId || !zone || !zone.eligiblePostcodes.includes(postcode)
+            }
+          >
             Register &amp; generate reference code
           </Button>
         </form>
