@@ -2,7 +2,7 @@
 
 > Transparent, fast, corruption-resistant disaster-relief distribution, built on Sui.
 
-**Hackathon tracks:** Sui Payments & Stablecoins · AI × Sui (GonkaRouter)
+**Hackathon tracks:** Sui Payments & Stablecoins · GonkaRouter
 
 ---
 
