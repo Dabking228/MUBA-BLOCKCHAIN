@@ -9,6 +9,8 @@ import { Callout } from "@/components/ui/Callout";
 import { AddressPill } from "@/components/AddressPill";
 import { AmountDisplay } from "@/components/AmountDisplay";
 import { useToast } from "@/components/ui/Toast";
+import { ZoneCredibilityPanel } from "@/components/admin/ZoneCredibilityPanel";
+import { publicEnv } from "@/lib/env";
 import { suiToMist } from "@/lib/format";
 import { TIER_LABELS, Tier, type DisasterZone } from "@/lib/types";
 
@@ -231,6 +233,8 @@ function ZoneRow({
             </div>
           ))}
         </div>
+
+        {publicEnv.enableZoneCredibility && <ZoneCredibilityPanel zoneId={zone.id} secret={secret} />}
       </CardContent>
     </Card>
   );

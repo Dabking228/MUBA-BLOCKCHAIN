@@ -2,6 +2,7 @@ import type {
   DisasterZoneRow,
   DonationRow,
   HouseholdRegistrationRow,
+  ZoneEvidenceRow,
 } from "@/lib/supabase/rows";
 import {
   type Channel,
@@ -10,6 +11,7 @@ import {
   type HouseholdRegistration,
   type RegistrationStatus,
   type Tier,
+  type ZoneEvidenceItem,
 } from "@/lib/types";
 
 export function rowToRegistration(r: HouseholdRegistrationRow): HouseholdRegistration {
@@ -41,6 +43,18 @@ export function rowToZone(r: DisasterZoneRow): DisasterZone {
     tierAmounts,
     budgetCap: String(r.budget_cap),
     budgetSpent: String(r.budget_spent),
+    createdAt: r.created_at,
+  };
+}
+
+export function rowToZoneEvidence(r: ZoneEvidenceRow): ZoneEvidenceItem {
+  return {
+    id: r.id,
+    zoneId: r.zone_id,
+    sourceType: r.source_type,
+    url: r.url,
+    extractedText: r.extracted_text,
+    fetchStatus: r.fetch_status,
     createdAt: r.created_at,
   };
 }

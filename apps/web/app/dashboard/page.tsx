@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
-import { getDashboardData } from "@/lib/queries";
+import { getDashboardData, getZoneCredibilitySummaries } from "@/lib/queries";
 import { StatTile } from "@/components/StatTile";
 import { ZoneDashboard } from "@/components/ZoneDashboard";
+import { ZoneCredibilitySummary } from "@/components/ZoneCredibilitySummary";
 import { RefreshButton } from "@/components/RefreshButton";
 import { AddressPill } from "@/components/AddressPill";
 import { AmountDisplay } from "@/components/AmountDisplay";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatRelative, mistToSui } from "@/lib/format";
+import { publicEnv } from "@/lib/env";
+import type { ZoneCredibilityRun } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +18,18 @@ export const metadata: Metadata = { title: "Transparency dashboard" };
 
 export default async function DashboardPage() {
   const data = await getDashboardData();
+
+  // Defensive: a problem in this newer, secondary feature must never break the
+  // primary transparency page. Falls back to an empty map on any failure.
+  let credibility: Record<string, ZoneCredibilityRun> = {};
+  if (publicEnv.enableZoneCredibility) {
+    try {
+      credibility = await getZoneCredibilitySummaries(data.zones.map((z) => z.id));
+    } catch (err) {
+      console.error("[dashboard] zone credibility summaries failed:", err);
+    }
+  }
+
   const claimedRate =
     data.pipeline.total > 0
       ? Math.round(((data.pipeline.paid + data.pipeline.verified) / data.pipeline.total) * 100)
@@ -62,7 +77,12 @@ export default async function DashboardPage() {
         ) : (
           <div className="grid gap-4 lg:grid-cols-2">
             {data.zones.map((z) => (
-              <ZoneDashboard key={z.id} zone={z} />
+              <div key={z.id} className="flex flex-col gap-2">
+                <ZoneDashboard zone={z} />
+                {publicEnv.enableZoneCredibility && (
+                  <ZoneCredibilitySummary run={credibility[z.id] ?? null} />
+                )}
+              </div>
             ))}
           </div>
         )}

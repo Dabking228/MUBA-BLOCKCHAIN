@@ -18,6 +18,9 @@ export const publicEnv = {
   googleClientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "",
   authMode: (process.env.NEXT_PUBLIC_AUTH_MODE ?? "dev") as "dev" | "google",
   showDemoLogins: (process.env.NEXT_PUBLIC_SHOW_DEMO_LOGINS ?? "true") === "true",
+  // Kill switch for the zone credibility (multi-model consensus) feature — one
+  // env change hides it everywhere (UI + the two new API routes refuse to run).
+  enableZoneCredibility: (process.env.NEXT_PUBLIC_ENABLE_ZONE_CREDIBILITY ?? "false") === "true",
   zkloginMaxEpochOffset: Number(process.env.NEXT_PUBLIC_ZKLOGIN_MAX_EPOCH_OFFSET ?? "10"),
   explorerBase: process.env.NEXT_PUBLIC_EXPLORER_BASE ?? "https://testnet.suivision.xyz",
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",

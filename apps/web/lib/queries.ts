@@ -1,14 +1,24 @@
 import "server-only";
 import { serviceClient } from "@/lib/supabase/admin";
 import { readTreasuryBalance } from "@/lib/sui/read";
-import { rowToDonation, rowToRegistration, rowToZone } from "@/lib/mappers";
+import { rowToDonation, rowToRegistration, rowToZone, rowToZoneEvidence } from "@/lib/mappers";
+import { resolveZoneCredibilityConsensus } from "@/lib/gonka/consensus";
 import { RegistrationStatus } from "@/lib/types";
 import type {
   DisasterZoneRow,
   DonationRow,
   HouseholdRegistrationRow,
+  ZoneCredibilityResultRow,
+  ZoneEvidenceRow,
 } from "@/lib/supabase/rows";
-import type { Donation, HouseholdRegistration, DisasterZone } from "@/lib/types";
+import type {
+  Donation,
+  HouseholdRegistration,
+  DisasterZone,
+  ModelCredibilityResult,
+  ZoneCredibilityRun,
+  ZoneEvidenceItem,
+} from "@/lib/types";
 
 export interface DashboardData {
   treasuryBalance: string;
@@ -138,4 +148,89 @@ export async function getTransparencySummary(): Promise<TransparencySummary> {
     zones: d.zones,
     pipeline: d.pipeline,
   };
+}
+
+// ===== Zone credibility (multi-model GonkaRouter consensus) =====
+
+export async function getZoneEvidence(zoneId: string): Promise<ZoneEvidenceItem[]> {
+  const sb = serviceClient();
+  const { data } = await sb
+    .from("zone_evidence")
+    .select("*")
+    .eq("zone_id", zoneId)
+    .order("created_at", { ascending: true });
+  return ((data ?? []) as ZoneEvidenceRow[]).map(rowToZoneEvidence);
+}
+
+function rowsToPerModel(rows: ZoneCredibilityResultRow[]): ModelCredibilityResult[] {
+  return rows.map((r) => ({
+    model: r.model,
+    ok: !r.error && !!r.label,
+    label: r.label ?? undefined,
+    score: r.score ?? undefined,
+    summary: r.summary ?? undefined,
+    gonkaRequestId: r.gonka_request_id ?? undefined,
+    error: r.error ?? undefined,
+  }));
+}
+
+/** The most recent credibility-check run for one zone (or an empty "none" run). */
+export async function getZoneCredibility(zoneId: string): Promise<ZoneCredibilityRun> {
+  const sb = serviceClient();
+  const { data: latest } = await sb
+    .from("zone_credibility_results")
+    .select("run_id, created_at")
+    .eq("zone_id", zoneId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!latest) {
+    return {
+      zoneId,
+      runId: null,
+      consensus: { label: null, score: null, respondedCount: 0, totalModels: 0, agreement: "none" },
+      perModel: [],
+    };
+  }
+
+  const { data: rows } = await sb
+    .from("zone_credibility_results")
+    .select("*")
+    .eq("run_id", latest.run_id);
+  const perModel = rowsToPerModel((rows ?? []) as ZoneCredibilityResultRow[]);
+  return {
+    zoneId,
+    runId: latest.run_id,
+    consensus: resolveZoneCredibilityConsensus(perModel),
+    perModel,
+    createdAt: latest.created_at,
+  };
+}
+
+/** The latest run per zone, for several zones in one query (used by the public dashboard). */
+export async function getZoneCredibilitySummaries(
+  zoneIds: string[],
+): Promise<Record<string, ZoneCredibilityRun>> {
+  if (zoneIds.length === 0) return {};
+  const sb = serviceClient();
+  const { data } = await sb
+    .from("zone_credibility_results")
+    .select("*")
+    .in("zone_id", zoneIds)
+    .order("created_at", { ascending: false });
+  const rows = (data ?? []) as ZoneCredibilityResultRow[];
+
+  const latestRunByZone = new Map<string, string>();
+  for (const r of rows) {
+    if (!latestRunByZone.has(r.zone_id)) latestRunByZone.set(r.zone_id, r.run_id);
+  }
+
+  const result: Record<string, ZoneCredibilityRun> = {};
+  for (const [zoneId, runId] of latestRunByZone) {
+    const runRows = rows.filter((r) => r.zone_id === zoneId && r.run_id === runId);
+    const perModel = rowsToPerModel(runRows);
+    result[zoneId] = { zoneId, runId, consensus: resolveZoneCredibilityConsensus(perModel), perModel };
+  }
+  return result;
 }

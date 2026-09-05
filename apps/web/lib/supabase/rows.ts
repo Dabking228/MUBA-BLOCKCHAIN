@@ -1,5 +1,7 @@
 // Row shapes for the Supabase read-mirror tables (supabase/0001_init.sql).
 
+import type { CredibilityLabel } from "@/lib/types";
+
 export interface DisasterZoneRow {
   id: string;
   name: string;
@@ -45,6 +47,29 @@ export interface AiRecommendationRow {
   recommendation: "approve" | "reject" | "needs_review";
   confidence: number | null;
   reasoning: string | null;
+  created_at: string;
+}
+
+export interface ZoneEvidenceRow {
+  id: number;
+  zone_id: string;
+  source_type: "url" | "text";
+  url: string | null;
+  extracted_text: string;
+  fetch_status: "ok" | "failed" | "manual";
+  created_at: string;
+}
+
+export interface ZoneCredibilityResultRow {
+  id: number;
+  zone_id: string;
+  run_id: string;
+  model: string;
+  label: CredibilityLabel | null;
+  score: number | null;
+  summary: string | null;
+  gonka_request_id: string | null;
+  error: string | null;
   created_at: string;
 }
 

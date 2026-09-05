@@ -156,3 +156,55 @@ export interface BulkRegisterDraft {
   headCount?: number;
   confidence?: number;
 }
+
+// ===== Zone credibility (multi-model GonkaRouter consensus) =====
+
+export type CredibilityLabel =
+  | "well-supported"
+  | "partially-supported"
+  | "insufficient-evidence"
+  | "inconsistent";
+
+export const CREDIBILITY_LABELS: Record<CredibilityLabel, string> = {
+  "well-supported": "Well supported",
+  "partially-supported": "Partially supported",
+  "insufficient-evidence": "Insufficient evidence",
+  inconsistent: "Inconsistent",
+};
+
+export interface ZoneEvidenceItem {
+  id: number;
+  zoneId: string;
+  sourceType: "url" | "text";
+  url: string | null;
+  extractedText: string;
+  fetchStatus: "ok" | "failed" | "manual";
+  createdAt: string;
+}
+
+/** One model's verdict within a credibility-check run. */
+export interface ModelCredibilityResult {
+  model: string;
+  ok: boolean;
+  label?: CredibilityLabel;
+  score?: number; // 0-100
+  summary?: string;
+  gonkaRequestId?: string;
+  error?: string;
+}
+
+export interface ZoneCredibilityConsensus {
+  label: CredibilityLabel | null; // null if zero models responded
+  score: number | null; // 0-100, mean of responding models
+  respondedCount: number;
+  totalModels: number;
+  agreement: "unanimous" | "split" | "single" | "none";
+}
+
+export interface ZoneCredibilityRun {
+  zoneId: string;
+  runId: string | null; // null if no check has ever been run
+  consensus: ZoneCredibilityConsensus;
+  perModel: ModelCredibilityResult[];
+  createdAt?: string;
+}
