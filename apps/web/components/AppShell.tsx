@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from 'next/image';
 import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
 import { cn } from "@/lib/utils";
@@ -84,13 +85,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-30 border-b border-border bg-surface/90 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4">
-          <Link href="/" className="flex items-center gap-2 font-semibold text-foreground">
-            <span
+          <Link href="/" className="flex items-center gap-0 font-semibold text-foreground">
+            <Image 
+              src="/MySteadyAid_Logo.png" 
+              alt="" 
+              width={50} 
+              height={50}
+              className="flex items-center justify-center"
+            />
+            {/* <span
               aria-hidden
               className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground text-xs"
             >
               M
-            </span>
+            </span> */}
             MySteadyAid
           </Link>
           <nav className="flex flex-1 items-center gap-1 overflow-x-auto">
